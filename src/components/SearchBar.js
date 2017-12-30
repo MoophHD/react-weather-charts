@@ -20,7 +20,7 @@ class SearchBar extends Component {
     handleSubmit(e) {
         if (e.key != 'Enter') return;
 
-        this.props.onSubmit(this.state.value);
+        this.props.onSubmit(this.state.value.toLowerCase());
     }
     render() {
         return(

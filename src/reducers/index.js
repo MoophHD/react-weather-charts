@@ -18,7 +18,16 @@ export default function index(state=initialState, action) {
             return { ...state, fetching: true }
         }
         case (GET_WEATHER_SUCCESS): {
-            return { ...state, fetching: false, w: action.payload }
+            let key = action.key;
+
+            let respond = { ...state, 
+                fetching: false, 
+                w: action.payload
+            };
+
+            if (key) respond = respond = {...respond, archive: {...state.archive, [key]: action.payload}};
+
+            return respond;
         }
         case (TOGGLE_DEGREE): {
             return { ...state, degree: state.degree == 'c' ? 'f' : 'c' }

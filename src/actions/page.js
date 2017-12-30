@@ -11,12 +11,16 @@ export function getWeather(area) {
         })
 
         let archiveW = getState().archive[area];
+        
+        console.log(archiveW);
 
         if (archiveW) {
             dispatch({
                 type: GET_WEATHER_SUCCESS,
                 payload: archiveW
             })
+
+            return;
         }
 
         let req = `select * from weather.forecast where woeid in (select woeid from geo.places(1) where text="${area}") and u=\'c\' `
@@ -32,7 +36,8 @@ export function getWeather(area) {
             
             dispatch({
                 type: GET_WEATHER_SUCCESS,
-                payload: w
+                payload: w,
+                key: area
             })
     
           }
