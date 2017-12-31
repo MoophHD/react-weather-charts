@@ -9,10 +9,9 @@ import * as actions from '../../actions/page';
 
 import ToggleDegreeBtn from './ToggleDegreeBtn';
 
-function type(d) {
-    d.value = +d.value; // coerce to number
-    return d;
-  }
+function toFahr(cels) {
+    return ~~(cels * (9/5) + 32);
+}
 
 class Chart extends Component {
     // componentWillReceiveProps(nextProps) {
@@ -27,26 +26,50 @@ class Chart extends Component {
     loadChart() {
         const { w, degree } = this.props;
 
+        if (Object.keys(w).length < 1) return;
+
         document.querySelector('.temp').innerHTML = JSON.stringify(w);
         document.querySelector('.temp1').innerHTML = degree;
         
-        const width = 960,
-              height = 500;
-        
         let data = w.query.results.channel.item.forecast.map((obj) => ~~((+obj.high + +obj.low)/2));
 
-        var x = d3.scale.linear()
-            .domain([d3.min(data), d3.max(data)])
-            .range([50, 420]);
-
         d3.selectAll('.chart > *').remove();
-        let chart = d3.select(".chart");
-        d3.select('.chart').selectAll('div')
-          .data(data)
-          .enter()
-          .append('div')
-          .style('width', (d) => x(d) + 'px')
-          .text((d) => d)
+
+        if (degree == 'f') {
+            data = data.map((cels) => toFahr(cels));
+        }
+
+        const height = 400,
+              barWidth = 30,  
+              barMargin = 7.5;
+        
+        var y = d3.scale.linear()
+          .domain([d3.min(data) - 5, d3.max(data) + 5])
+          .range([height, 0]);
+        
+        var chart = d3.select(".chart")
+            .attr("height", height + 20)
+            .attr("width", barWidth * data.length + Math.max(0, barMargin * (data.length - 1)));
+        
+        var bar = chart.selectAll("g")
+            .data(data)
+              .enter()
+              .append("g")
+            .attr("transform", (d, i) => `translate(${i * (barWidth + barMargin)},0)`);
+        
+        bar.append("rect")
+                .attr("y", function(d) { return y(d); })
+            .attr("width", barWidth)
+            .attr("height", (d) => height - y(d));
+            
+        bar.append("text")
+            .attr("x", (barWidth)/ 2 )
+            .attr("y", height + 10)
+            // .attr("dx", ".25em") 
+            .text(function(d) { return d; });
+        
+        
+
 
         /*
             
@@ -88,16 +111,15 @@ class Chart extends Component {
     }
     
     render() {
-        // const { w, degree } = this.props;
+        const { degree } = this.props;
         const { toggleDegree } = this.props.actions;
 
         return(
             <div className="chart--container">
-                <ToggleDegreeBtn onClick={toggleDegree} />
-                <div className="chart"></div>
+                <ToggleDegreeBtn degree={degree} onClick={toggleDegree} />
+                <svg className="chart"></svg>
                 <div className="temp"></div>
                 <div className="temp1"></div>
-                {/* <svg className="chart"></svg> */}
             </div>
         )
     }
@@ -117,3 +139,4 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Chart);
+
