@@ -19,11 +19,27 @@
     text-anchor: middle;
 }
 
+.chart--wrapper {
+    margin-top: 5px;
+    height: 450px;
+    width: 600px;
+    background-color: #f1f1f1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart--container {
+    position: relative;   
+}
+
 .degreeBtn {
+    position: absolute;
+    right: 25px;
+    top: 25px;
     background-color: crimson;
     width: 150px;
     height: 50px;
-    margin-top: 50px;
     color: white;
     border: none;
 }

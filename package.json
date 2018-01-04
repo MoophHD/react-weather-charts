@@ -33,7 +33,7 @@
   "dependencies": {
     "babel-polyfill": "^6.3.14",
     "babel-runtime": "^6.3.19",
-    "d3": "3.5.17",
+    "d3-scale": "1.0.7",
     "node-sass": "4.7.2",
     "prop-types": "15.6.0",
     "raw-loader": "0.5.1",

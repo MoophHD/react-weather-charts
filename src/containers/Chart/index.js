@@ -1,13 +1,20 @@
 /* eslint-disable */
 
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import './_chart.scss';
-import * as d3 from 'd3';
 import * as actions from '../../actions/page';
 
 import ToggleDegreeBtn from './ToggleDegreeBtn';
+import Spinner from './Spinner';
+
+const AXIS_STROKE = 1,
+      HEIGHT = 450,
+      WIDTH = 600,
+      PADDING = 15,
+      RADIUS = 5;
 
 function toFahr(cels) {
     return ~~(cels * (9/5) + 32);
@@ -27,83 +34,76 @@ class Chart extends Component {
         const { w, degree } = this.props;
 
         if (Object.keys(w).length < 1) return;
-
-        document.querySelector('.temp').innerHTML = JSON.stringify(w);
-        document.querySelector('.temp1').innerHTML = degree;
-        
-        let data = w.query.results.channel.item.forecast.map((obj) => ~~((+obj.high + +obj.low)/2));
-
         d3.selectAll('.chart > *').remove();
 
+        let days = w.query.results.channel.item.forecast.map((obj) => obj.day);
+        let degrees = w.query.results.channel.item.forecast.map((obj) => ~~((+obj.high + +obj.low)/2));
+        
         if (degree == 'f') {
-            data = data.map((cels) => toFahr(cels));
+            degrees = degrees.map((cels) => toFahr(cels));
         }
 
-        const height = 400,
-              barWidth = 30,  
-              barMargin = 7.5;
+        let container = d3.select('.chart');
+
+        let y = d3.scaleLinear()
+            .domain(d3.extent(degrees))
+            .range([HEIGHT - PADDING*3.5, PADDING] );
         
-        var y = d3.scale.linear()
-          .domain([d3.min(data) - 5, d3.max(data) + 5])
-          .range([height, 0]);
+        let yAxis = d3.axisRight(y)
+            .tickPadding(10);
+
+        let x = d3.scaleLinear()
+            .domain([0, degrees.length])
+            .range([PADDING*3.5, WIDTH - PADDING]);
+
+        console.log(WIDTH)
+        let xAxis = d3.axisTop(x);  
         
-        var chart = d3.select(".chart")
-            .attr("height", height + 20)
-            .attr("width", barWidth * data.length + Math.max(0, barMargin * (data.length - 1)));
-        
-        var bar = chart.selectAll("g")
-            .data(data)
-              .enter()
-              .append("g")
-            .attr("transform", (d, i) => `translate(${i * (barWidth + barMargin)},0)`);
-        
-        bar.append("rect")
-                .attr("y", function(d) { return y(d); })
-            .attr("width", barWidth)
-            .attr("height", (d) => height - y(d));
-            
-        bar.append("text")
-            .attr("x", (barWidth)/ 2 )
-            .attr("y", height + 10)
-            // .attr("dx", ".25em") 
-            .text(function(d) { return d; });
-        
-        
+        container.append('g') // degrees
+            .classed('y-axis', true)
+            .call(yAxis)
+            .selectAll('line, path')
+              .remove();
+
+        container.append('g') //days
+            .attr("transform", `translate(0,${HEIGHT - PADDING})`)
+            .classed('x-axis', true)
+            .call(xAxis)
+            .selectAll('line, path')
+              .remove();
+
+        d3.selectAll('.x-axis text')
+              .text((d, i) => days[i])
+
+        let coords = [];
+
+        container
+            .selectAll('circle')
+            .data(degrees)
+            .enter()
+            .append('circle')
+            .attr('transform', (d, i) => { coords.push([x(i), y(d)]); return `translate(${x(i)}, ${y(d)})`})
+            .attr('r', RADIUS)
+            .attr('fill', '#333');
+
+        container
+            .selectAll('line')
+            .data(Array.from(Array(degrees.length-1).keys()))
+            .enter()
+            .append('line')
+            .attr('x1', (d, i) => coords[i][0])
+            .attr('y1', (d, i) => coords[i][1])
+            .attr('x2', (d, i) => coords[i+1][0])
+            .attr('y2', (d, i) => coords[i+1][1])
+            .style('stroke', '#333')
+            .style('stroke-width', 1);
 
 
-        /*
-            
-        var y = d3.scale.linear()
-            .range([height, 0]);
-
-        var chart = d3.select(".chart")
-            .attr("width", width)
-            .attr("height", height);
-
-        var barWidth = width / data.length;
-
-        var bar = chart.selectAll("g")
-            .data(data)
-            .enter().append("g")
-            .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
-        
-        bar.append("rect")
-            .attr("y", function(d) { return y(d.value); })
-            .attr("height", function(d) { return height - y(d.value); })
-            .attr("width", barWidth - 1);
-        
-        bar.append("text")
-            .attr("x", barWidth / 2)
-            .attr("y", function(d) { return y(d.value) + 3; })
-            .attr("dy", ".75em")
-            .text(function(d) { return d.value; });
-
-            */
     }
 
+
     componentDidUpdate() {
-        console.log('!');
-        this.loadChart();
+        if (!this.fetching) this.loadChart();
     }
 
     componentDidMount() {
@@ -111,15 +111,19 @@ class Chart extends Component {
     }
     
     render() {
-        const { degree } = this.props;
+        const { degree, fetching } = this.props;
         const { toggleDegree } = this.props.actions;
 
+
         return(
-            <div className="chart--container">
-                <ToggleDegreeBtn degree={degree} onClick={toggleDegree} />
-                <svg className="chart"></svg>
-                <div className="temp"></div>
-                <div className="temp1"></div>
+            <div className="chart--wrapper">
+                { fetching ?     
+                    (<Spinner />) :    
+                    (<div ref={el => this.cont = el} className="chart--container">
+                        <ToggleDegreeBtn degree={degree} onClick={toggleDegree} />
+                        <svg width={WIDTH} height={HEIGHT} className="chart"></svg>
+                    </div>)
+                }
             </div>
         )
     }
@@ -128,7 +132,8 @@ class Chart extends Component {
 function mapStateToProps(state) {
     return {
       w: state.w,
-      degree: state.degree
+      degree: state.degree,
+      fetching: state.fetching
     }
   }
 
@@ -136,6 +141,11 @@ function mapDispatchToProps(dispatch) {
   return {
     actions: bindActionCreators(actions, dispatch)
   }
+}
+
+Chart.PropTypes = {
+    w: PropTypes.object,
+    fetching: PropTypes.bool
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Chart);
