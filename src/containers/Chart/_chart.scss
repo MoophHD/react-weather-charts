@@ -33,13 +33,28 @@
     position: relative;   
 }
 
-.degreeBtn {
+.btn {
     position: absolute;
     right: 25px;
     top: 25px;
-    background-color: crimson;
-    width: 150px;
+    background-color: #dfdfdf;
+    width: 100px;
     height: 50px;
     color: white;
     border: none;
+    display: flex;
+    padding: 0 2.5px;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+.btn--degree {
+    line-height: 3em;
+    font-size: 1.5em;
+    flex-grow: 1;
+    background-color: none;
+    border-radius: 5px;
+    &-active {
+        background-color: crimson;
+    }
 }

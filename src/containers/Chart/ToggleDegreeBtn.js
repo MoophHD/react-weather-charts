@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 
 const ToggleDegreeBtn = ({onClick, degree}) => (
     <button
-        className="degreeBtn"
+        className="btn"
         onClick={onClick}>
-        {degree.toUpperCase()}
+        <span className={`btn--degree ${degree == 'c' ? 'btn--degree-active' : ''}`}>C</span>
+        <span className={`btn--degree ${degree == 'f' ? 'btn--degree-active' : ''}`} >F</span>
     </button>
 )
 

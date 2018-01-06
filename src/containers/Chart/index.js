@@ -56,7 +56,6 @@ class Chart extends Component {
             .domain([0, degrees.length])
             .range([PADDING*3.5, WIDTH - PADDING]);
 
-        console.log(WIDTH)
         let xAxis = d3.axisTop(x);  
         
         container.append('g') // degrees
@@ -97,8 +96,6 @@ class Chart extends Component {
             .attr('y2', (d, i) => coords[i+1][1])
             .style('stroke', '#333')
             .style('stroke-width', 1);
-
-
     }
 
 
